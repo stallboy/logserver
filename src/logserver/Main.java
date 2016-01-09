@@ -138,9 +138,12 @@ public class Main {
         }
         socket.close();
 
-        try {
-            stopped.take();
-        } catch (InterruptedException ignored) {
+        while(true) {
+            try {
+                stopped.take();
+                break;
+            } catch (InterruptedException ignored) {
+            }
         }
         System.out.println("shutdown hook stop over");
     }
