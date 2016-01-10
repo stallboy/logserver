@@ -11,10 +11,6 @@ import java.util.concurrent.*;
 
 public class Main {
 
-    private static final String SYSTEM = "system";
-    private static final String NULL = "null";
-    private static final String EXCEPTION = "exception";
-
     private static void usage(String reason) {
         System.err.println(reason);
         System.out.println("Usage: java -jar logserver.jar [options]");
@@ -26,6 +22,10 @@ public class Main {
         System.out.println("    -integerid      true if set, default false");
         Runtime.getRuntime().exit(1);
     }
+
+    private static final String SYSTEM = "system";
+    private static final String NULL = "null";
+    private static final String EXCEPTION = "exception";
 
     private static LogFileCache cache;
     private static ExecutorService executor;
@@ -87,13 +87,13 @@ public class Main {
                     socket.receive(packet);
                     String packetStr = new String(packet.getData(), 0, packet.getLength(), "UTF-8");
                     String[] pack = packetStr.split("@", 2);
-                    boolean idOk = (pack.length == 2 && !pack[0].isEmpty() && isIntegerIf(pack[0], integerid));
+                    boolean idOk = (pack.length == 2 && !pack[0].isEmpty() && checkIntegerIf(pack[0], integerid));
                     String id = idOk ? pack[0] : NULL;
                     String message = idOk ? pack[1] : packetStr;
                     if (message.endsWith("\n"))
-                        message = message.substring(0, message.length()-1);
+                        message = message.substring(0, message.length() - 1);
                     if (message.endsWith("\r"))
-                        message = message.substring(0, message.length()-1);
+                        message = message.substring(0, message.length() - 1);
                     LocalDateTime now = LocalDateTime.now();
                     InetAddress address = packet.getAddress();
                     enqueue(now, address, id, message, true);
@@ -138,7 +138,7 @@ public class Main {
         }
         socket.close();
 
-        while(true) {
+        while (true) {
             try {
                 stopped.take();
                 break;
@@ -154,7 +154,7 @@ public class Main {
             try {
                 cache.get(id).log(msg, null);
             } catch (Throwable e) {
-                if (logException){
+                if (logException) {
                     try {
                         cache.get(SYSTEM).log(msg, e);
                     } catch (Throwable ignored) {
@@ -164,10 +164,10 @@ public class Main {
         });
     }
 
-    private static boolean isIntegerIf(String id, boolean integerid) {
+    private static boolean checkIntegerIf(String id, boolean integerid) {
         if (integerid) {
             try {
-                Integer.parseInt(id);
+                Long.parseLong(id);
             } catch (NumberFormatException e) {
                 return false;
             }
