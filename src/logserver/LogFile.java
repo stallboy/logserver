@@ -19,9 +19,9 @@ public final class LogFile {
         home = new File(Home, identification);
         home.mkdirs();
         File file = new File(home, "logger.log");
-        long lastModified = file.lastModified();
-        if (lastModified != 0 && lastModified < toMilli(nextRotateTime().minusDays(1))) {
-            rotate(LocalDateTime.ofInstant(Instant.ofEpochMilli(lastModified), ZoneOffset.UTC));
+        LocalDateTime lastModified = toLocale(file.lastModified());
+        if (file.exists() && lastModified.isBefore(nextRotateTime().minusDays(1))) {
+            rotate(lastModified);
         } else {
             open(file);
         }
@@ -73,7 +73,7 @@ public final class LogFile {
         return rotateTime.isAfter(now) ? rotateTime : rotateTime.plusDays(1);
     }
 
-    private static long toMilli(LocalDateTime dt) {
-        return dt.toInstant(ZoneOffset.UTC).toEpochMilli();
+    private static LocalDateTime toLocale(long time) {
+        return LocalDateTime.ofInstant(Instant.ofEpochMilli(time), ZoneOffset.UTC);
     }
 }
