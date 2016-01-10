@@ -11,9 +11,9 @@ import java.util.concurrent.*;
 
 public class Main {
 
-    private static final String SystemIdentification = "system";
-    private static final String NullIdentification = "null";
-    private static final String ExceptionIdentification = "exception";
+    private static final String SYSTEM = "system";
+    private static final String NULL = "null";
+    private static final String EXCEPTION = "exception";
 
     private static void usage(String reason) {
         System.err.println(reason);
@@ -78,7 +78,7 @@ public class Main {
         cache = new LogFileCache(fileopencache);
         executor = Executors.newSingleThreadExecutor();
         Runtime.getRuntime().addShutdownHook(new Thread(Main::stop, "logserver.ShutdownHook"));
-        enqueue(LocalDateTime.now(), InetAddress.getLoopbackAddress(), SystemIdentification, "logger started", false);
+        enqueue(LocalDateTime.now(), InetAddress.getLoopbackAddress(), SYSTEM, "logger started", false);
         try (DatagramSocket socket = new DatagramSocket(port)) {
             byte[] buffer = new byte[4096];
             while (!stop) {
@@ -88,7 +88,7 @@ public class Main {
                     String packetStr = new String(packet.getData(), 0, packet.getLength(), "UTF-8");
                     String[] pack = packetStr.split("@", 2);
                     boolean idOk = (pack.length == 2 && !pack[0].isEmpty() && isIntegerIf(pack[0], integerid));
-                    String id = idOk ? pack[0] : NullIdentification;
+                    String id = idOk ? pack[0] : NULL;
                     String message = idOk ? pack[1] : packetStr;
                     if (message.endsWith("\n"))
                         message = message.substring(0, message.length()-1);
@@ -100,12 +100,12 @@ public class Main {
 
                     boolean guessException = message.contains("\n") || message.contains("\r");
                     if (guessException)
-                        enqueue(now, address, ExceptionIdentification, packetStr, false);
+                        enqueue(now, address, EXCEPTION, packetStr, false);
                 } catch (IOException ignored) {
                 }
             }
         }
-        enqueue(LocalDateTime.now(), InetAddress.getLoopbackAddress(), SystemIdentification, "logger stop", false);
+        enqueue(LocalDateTime.now(), InetAddress.getLoopbackAddress(), SYSTEM, "logger stop", false);
 
         for (executor.shutdown(); true; ) {
             try {
@@ -118,7 +118,7 @@ public class Main {
 
         stopped.offer(new Object());
 
-        System.out.println("main thread stop over");
+        System.out.println("main thread end");
     }
 
     private static void stop() {
@@ -145,7 +145,7 @@ public class Main {
             } catch (InterruptedException ignored) {
             }
         }
-        System.out.println("shutdown hook stop over");
+        System.out.println("shutdown hook end");
     }
 
     private static void enqueue(LocalDateTime now, InetAddress address, String id, String message, boolean logException) {
@@ -156,7 +156,7 @@ public class Main {
             } catch (Throwable e) {
                 if (logException){
                     try {
-                        cache.get(SystemIdentification).log(msg, e);
+                        cache.get(SYSTEM).log(msg, e);
                     } catch (Throwable ignored) {
                     }
                 }
